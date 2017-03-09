@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+// Lbl provides a way to add strings that will not be wrapped in quotes
+type Lbl string
+
+// LogVal returns the underlying string
+func (l Lbl) LogVal() string { return string(l) }
+
 // KV write a key value pair as "key=value".
 type KV struct {
 	k string

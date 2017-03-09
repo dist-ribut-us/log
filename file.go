@@ -43,21 +43,44 @@ func open(path ...string) (*os.File, error) {
 
 // Line attempts to return the file and line number i positions up the call
 // stack. It returns only the file name, not the directory. In the case that it
-// cannot fetch the information, an empty string is returned.
+// cannot fetch the information, an empty string is returned. If i is negative
+// it will return the whole stack
 func Line(i int) Val {
-	_, file, l, ok := runtime.Caller(i + 1)
-	if !ok {
-		return line("")
-	}
-	for i := len(file) - 1; i >= 0; i-- {
-		if file[i] == '/' {
-			file = file[i+1:]
-			break
+	var file string
+	var l int
+	var ptr uintptr
+	ok := true
+	if i < 0 {
+		strs := []string{""}
+		for i = -i; true; i++ {
+			ptr, file, l, ok = runtime.Caller(i)
+			if !ok {
+				break
+			}
+			strs = append(strs, fmt.Sprintf("%s:%d %s", getFileName(file), l, getFuncName(ptr)))
 		}
+		return Lbl(strings.Join(strs, "\n  "))
 	}
-	return line(fmt.Sprint(file, ":", l))
+	ptr, file, l, ok = runtime.Caller(i + 1)
+	if !ok {
+		return Lbl("")
+	}
+	return Lbl(fmt.Sprintf("%s:%d %s", getFileName(file), l, getFuncName(ptr)))
 }
 
-type line string
+func getFileName(file string) string {
+	for i := len(file) - 1; i >= 0; i-- {
+		if file[i] == '/' {
+			return file[i+1:]
+		}
+	}
+	return file
+}
 
-func (l line) LogVal() string { return string(l) }
+func getFuncName(ptr uintptr) string {
+	f := runtime.FuncForPC(ptr)
+	if f == nil {
+		return ""
+	}
+	return f.Name()
+}
