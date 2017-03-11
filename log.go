@@ -17,13 +17,13 @@ func (l Lbl) LogVal() string { return string(l) }
 
 // KV write a key value pair as "key=value".
 type KV struct {
-	k string
-	v interface{}
+	K string
+	V interface{}
 }
 
 // LogVal sets how KV will be displayed in the logs
-func (kv *KV) LogVal() string {
-	return fmt.Sprintf("%s=%s", kv.k, Formatter(kv.v))
+func (kv KV) LogVal() string {
+	return fmt.Sprintf("%s=%s", kv.K, Formatter(kv.V))
 }
 
 // Val takes priority in Format.

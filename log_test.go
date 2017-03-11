@@ -17,7 +17,7 @@ func TestLog(t *testing.T) {
 	assert.NotNil(t, l)
 	assert.Equal(t, `"test"`, l.data)
 	l.Info("foo", "bar")
-	l.Info(&KV{"pi", 3.1415})
+	l.Info(KV{"pi", 3.1415})
 	s := b.String()
 	assert.Contains(t, s, ` "test" "foo" "bar"`)
 	assert.Contains(t, s, ` pi=3.1415`)
