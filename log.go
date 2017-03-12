@@ -87,6 +87,12 @@ func New(w io.Writer) *Log {
 
 // To changes the writer for a log
 func (l *Log) To(w io.Writer) {
+	if l == nil {
+		l = &Log{
+			w: ref(w),
+		}
+		return
+	}
 	l.w.Lock()
 	defer l.w.Unlock()
 	l.w.Writer = w
