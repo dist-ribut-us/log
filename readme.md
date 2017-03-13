@@ -3,8 +3,6 @@
 [![GoDoc](https://godoc.org/github.com/dist-ribut-us/log?status.svg)](https://godoc.org/github.com/dist-ribut-us/log)
 
 ### ToDo
-Truncate is not working correctly.
-
 Buffered logs - particularly good for debugging. A log that writes to a buffer
 and only on Commit is it dumped to the log.
 
