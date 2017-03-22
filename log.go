@@ -43,7 +43,7 @@ func Format(value interface{}) string {
 	case time.Time:
 		return t.UTC().Format(TimeFormat)
 	case string, error, fmt.Stringer:
-		return fmt.Sprintf("%q", t)
+		return fmt.Sprintf("\"%s\"", t)
 	}
 	return fmt.Sprint(value)
 }
