@@ -58,6 +58,7 @@ type Log struct {
 	data  string
 	debug bool
 	line  int
+	trace []int
 }
 
 // wRef is a reference to the io.Writer and it's mutex. This allows all the
@@ -98,6 +99,28 @@ func (l *Log) To(w io.Writer) {
 	l.w.Writer = w
 }
 
+// Mute a log by setting the writer to nil
+func (l *Log) Mute() { l.To(nil) }
+
+// SetTrace to include line in log messages
+func (l *Log) SetTrace(ints ...int) {
+	if len(ints) == 0 {
+		ints = []int{l.line}
+	}
+
+	if ints[0] >= 0 {
+		ints[0] += 2
+	} else {
+		ints[0] -= 2
+	}
+	l.trace = ints
+}
+
+// NoTrace disables SetTrace
+func (l *Log) NoTrace() {
+	l.trace = nil
+}
+
 // Child creates a new log that uses the same writer. All data passed in will
 // be written on every line written to this log.
 func (l *Log) Child(data ...interface{}) *Log {
@@ -120,6 +143,7 @@ func (l *Log) Child(data ...interface{}) *Log {
 		w:     l.w,
 		data:  strings.Join(strs, " "),
 		debug: l.debug,
+		trace: l.trace,
 	}
 }
 
@@ -148,17 +172,39 @@ func (l *Log) write(flag string, data ...interface{}) {
 	if l == nil || l.w.Writer == nil {
 		return
 	}
-	var strs []string
-	o := 3
-	if l.data == "" {
-		o = 2
-		strs = make([]string, len(data)+2)
-	} else {
-		strs = make([]string, len(data)+3)
-		strs[2] = l.data
+
+	// find length and offset of strings
+	o := 2
+	ldata := -1
+	trace := -1
+	ln := len(data)
+	if len(l.trace) > 0 && (flag != "ERROR" && flag != "DEBUG") {
+		if l.trace[0] >= 0 {
+			trace = o
+			o++
+		} else {
+			trace = -2
+			ln++
+		}
 	}
+	if l.data != "" {
+		ldata = o
+		o++
+	}
+
+	strs := make([]string, ln+o)
+
+	// populate strings
 	strs[0] = Formatter(time.Now())
 	strs[1] = flag
+	if trace == -2 {
+		strs[ln+o-1] = Line(l.trace...).LogVal()
+	} else if trace > -1 {
+		strs[trace] = Line(l.trace...).LogVal()
+	}
+	if ldata > -1 {
+		strs[ldata] = l.data
+	}
 	for i, d := range data {
 		strs[i+o] = Formatter(d)
 	}

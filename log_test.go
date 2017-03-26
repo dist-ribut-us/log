@@ -116,3 +116,29 @@ func TestGoLog(t *testing.T) {
 	s = b.String()
 	assert.Contains(t, s, "test2")
 }
+
+func TestTrace(t *testing.T) {
+	b := &bytes.Buffer{}
+	l := New(b)
+	l.SetTrace()
+	A(l)
+	s := b.String()
+	assert.Contains(t, s, "INFO log/log_test.go:")
+	assert.Contains(t, s, "log.A")
+
+	b.Reset()
+	l.SetTrace(-1)
+	B(l)
+	s = b.String()
+	assert.Contains(t, s, "\n  log/log_test.go:")
+	assert.Contains(t, s, "log.A")
+	assert.Contains(t, s, "log.B")
+}
+
+func A(lgr *Log) {
+	lgr.Info()
+}
+
+func B(lgr *Log) {
+	A(lgr)
+}

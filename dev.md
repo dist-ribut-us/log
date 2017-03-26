@@ -17,3 +17,10 @@ in both size and time. Maybe when opening there's a chance to check it. Or
 create a LogFile type. Give it a buffer and have it occasionally clean out the
 file, the buffer can hold content until it's done.
 
+The way function names are printed is obnoxious - at least for methods:
+overlay/message.go:135 github.com/dist-ribut-us/overlay.(*Server).NetSend
+the "github.com/dist-ribut-us/overlay." part is redundant.
+
+Need to take a closer look at trim - I'm not sure it's always correct to trim a
+fixed number from the bottom of the stack. I may need to white list certain
+functions for trimming.

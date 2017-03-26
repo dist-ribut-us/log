@@ -16,6 +16,18 @@ var defaultLogger = &Log{
 // To sets the writer for the default logger
 func To(w io.Writer) { defaultLogger.To(w) }
 
+// Mute default logger by setting the writer to nil
+func Mute() { defaultLogger.Mute() }
+
+// ToStdOut sets default logger to write to os.Stdout
+func ToStdOut() { defaultLogger.To(os.Stdout) }
+
+// SetTrace to include line in default logger log messages
+func SetTrace(ints ...int) { defaultLogger.SetTrace(ints...) }
+
+// NoTrace disables SetTrace
+func NoTrace() { defaultLogger.NoTrace() }
+
 // ToFile sets the default logger to log to a file. If no path is given, it will
 // creat a file in the working directory with the same name as the program
 // followed by ".log". If more than one path is given, everything beyond the
