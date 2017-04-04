@@ -74,6 +74,9 @@ func ref(w io.Writer) *wRef {
 }
 
 func (r *wRef) Write(b []byte) (int, error) {
+	if r == nil || r.Writer == nil {
+		return 0, nil
+	}
 	r.Lock()
 	defer r.Unlock()
 	return r.Writer.Write(b)
