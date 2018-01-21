@@ -23,13 +23,13 @@ func Mute() { defaultLogger.Mute() }
 func ToStdOut() { defaultLogger.To(os.Stdout) }
 
 // SetTrace to include line in default logger log messages
-func SetTrace(ints ...int) { defaultLogger.SetTrace(ints...) }
+func SetTrace(start, end, pathDepth int) { defaultLogger.SetTrace(start, end, pathDepth) }
 
 // NoTrace disables SetTrace
 func NoTrace() { defaultLogger.NoTrace() }
 
 // ToFile sets the default logger to log to a file. If no path is given, it will
-// creat a file in the working directory with the same name as the program
+// create a file in the working directory with the same name as the program
 // followed by ".log". If more than one path is given, everything beyond the
 // first is ingored.
 func ToFile(path ...string) error {

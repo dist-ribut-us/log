@@ -3,9 +3,7 @@ package log
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	gl "log"
-	"os"
 	"testing"
 )
 
@@ -43,23 +41,6 @@ func TestTwoChildren(t *testing.T) {
 	assert.Contains(t, s, "child2")
 	assert.NotContains(t, s, "child1")
 	b.Reset()
-}
-
-func TestFile(t *testing.T) {
-	l, err := File("test.log")
-	assert.NoError(t, err)
-	l.Info("this is a test")
-	if f, ok := (l.w.Writer).(*os.File); ok {
-		assert.NoError(t, f.Close())
-	} else {
-		t.Error("Should be a file")
-	}
-	b, err := ioutil.ReadFile("test.log")
-	assert.NoError(t, err)
-	s := string(b)
-	assert.Contains(t, s, "this is a test")
-	assert.Contains(t, s, "INFO")
-	assert.NoError(t, os.Remove("test.log"))
 }
 
 func TestNil(t *testing.T) {
@@ -120,17 +101,17 @@ func TestGoLog(t *testing.T) {
 func TestTrace(t *testing.T) {
 	b := &bytes.Buffer{}
 	l := New(b)
-	l.SetTrace()
+	l.SetTrace(0, 1, 1)
 	A(l)
 	s := b.String()
 	assert.Contains(t, s, "INFO log/log_test.go:")
 	assert.Contains(t, s, "log.A")
 
 	b.Reset()
-	l.SetTrace(-1)
+	l.SetTrace(0, 2, 1)
 	B(l)
 	s = b.String()
-	assert.Contains(t, s, "\n  log/log_test.go:")
+	assert.Contains(t, s, "\n\tlog/log_test.go:")
 	assert.Contains(t, s, "log.A")
 	assert.Contains(t, s, "log.B")
 }

@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"github.com/dist-ribut-us/bufpool"
 	"io"
 	"os"
 	"strings"
@@ -35,7 +36,7 @@ type Val interface {
 var TimeFormat = "2006-01-02_15:04:05.00"
 
 // Format takes a value and converts it to a string. It makes sure any string
-// values are wrapped in quotes. Anything with a method of Log()string
+// values are wrapped in quotes. Anything fulfilling Val takes priority.
 func Format(value interface{}) string {
 	switch t := value.(type) {
 	case Val:
@@ -58,7 +59,10 @@ type Log struct {
 	data  string
 	debug bool
 	line  int
-	trace []int
+	trace struct {
+		start, end, pathDepth int
+		enabled               bool
+	}
 }
 
 // wRef is a reference to the io.Writer and it's mutex. This allows all the
@@ -106,22 +110,16 @@ func (l *Log) To(w io.Writer) {
 func (l *Log) Mute() { l.To(nil) }
 
 // SetTrace to include line in log messages
-func (l *Log) SetTrace(ints ...int) {
-	if len(ints) == 0 {
-		ints = []int{l.line}
-	}
-
-	if ints[0] >= 0 {
-		ints[0] += 2
-	} else {
-		ints[0] -= 2
-	}
-	l.trace = ints
+func (l *Log) SetTrace(start, end, pathDepth int) {
+	l.trace.start = start + 2
+	l.trace.end = end
+	l.trace.pathDepth = pathDepth
+	l.trace.enabled = true
 }
 
 // NoTrace disables SetTrace
 func (l *Log) NoTrace() {
-	l.trace = nil
+	l.trace.enabled = false
 }
 
 // Child creates a new log that uses the same writer. All data passed in will
@@ -176,42 +174,29 @@ func (l *Log) write(flag string, data ...interface{}) {
 		return
 	}
 
-	// find length and offset of strings
-	o := 2
-	ldata := -1
-	trace := -1
-	ln := len(data)
-	if len(l.trace) > 0 && (flag != "ERROR" && flag != "DEBUG") {
-		if l.trace[0] >= 0 {
-			trace = o
-			o++
-		} else {
-			trace = -2
-			ln++
+	buf := bufpool.Get()
+	buf.WriteString(Formatter(time.Now()))
+	buf.WriteString(" ")
+	buf.WriteString(flag)
+	buf.WriteString(" ")
+	if l.trace.enabled && (flag != "ERROR") {
+		v := TraceDepth(l.trace.start, l.trace.end, l.trace.pathDepth)
+		if v != nil {
+			buf.WriteString(v.LogVal())
+			buf.WriteString(" ")
 		}
 	}
 	if l.data != "" {
-		ldata = o
-		o++
+		buf.WriteString(l.data)
+		buf.WriteString(" ")
 	}
-
-	strs := make([]string, ln+o)
-
-	// populate strings
-	strs[0] = Formatter(time.Now())
-	strs[1] = flag
-	if trace == -2 {
-		strs[ln+o-1] = Line(l.trace...).LogVal()
-	} else if trace > -1 {
-		strs[trace] = Line(l.trace...).LogVal()
+	for _, d := range data {
+		buf.WriteString(Formatter(d))
+		buf.WriteString(" ")
 	}
-	if ldata > -1 {
-		strs[ldata] = l.data
-	}
-	for i, d := range data {
-		strs[i+o] = Formatter(d)
-	}
-	fmt.Fprintln(l.w, strings.Join(strs, " "))
+	buf.WriteString("\n")
+	l.w.Write(buf.Bytes())
+	bufpool.Put(buf)
 }
 
 // Info writes data to the log with the INFO flag
@@ -223,7 +208,7 @@ func (l *Log) Error(err error) bool {
 	if err == nil {
 		return false
 	}
-	l.write("ERROR", Line(1+l.line), err)
+	l.write("ERROR", CallLine(1), err)
 	return true
 }
 
@@ -233,7 +218,7 @@ func (l *Log) Panic(err error) {
 	if err == nil {
 		return
 	}
-	l.write("PANIC", Line(1+l.line), err)
+	l.write("PANIC", CallLine(1), err)
 	l.Close()
 	panic(err)
 }
