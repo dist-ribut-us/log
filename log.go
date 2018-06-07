@@ -208,7 +208,7 @@ func (l *Log) Error(err error) bool {
 	if err == nil {
 		return false
 	}
-	l.write("ERROR", CallLine(1), err)
+	l.write("ERROR", CallLine(2), err)
 	return true
 }
 
@@ -218,7 +218,7 @@ func (l *Log) Panic(err error) {
 	if err == nil {
 		return
 	}
-	l.write("PANIC", CallLine(1), err)
+	l.write("PANIC", CallLine(2), err)
 	l.Close()
 	panic(err)
 }
