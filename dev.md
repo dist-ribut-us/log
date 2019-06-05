@@ -24,3 +24,7 @@ the "github.com/dist-ribut-us/overlay." part is redundant.
 Need to take a closer look at trim - I'm not sure it's always correct to trim a
 fixed number from the bottom of the stack. I may need to white list certain
 functions for trimming.
+
+Redirecting output should only work in one direction. So redirecting the writer
+should effect all children, but not the parents. This is mostly easy, but it's
+hard to re-unite with the parent.

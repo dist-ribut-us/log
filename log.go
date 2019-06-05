@@ -109,7 +109,8 @@ func (l *Log) To(w io.Writer) {
 // Mute a log by setting the writer to nil
 func (l *Log) Mute() { l.To(nil) }
 
-// SetTrace to include line in log messages
+// SetTrace to include line in log messages. To output just the calling line,
+// invoke log.SetTrace(1,1,1)
 func (l *Log) SetTrace(start, end, pathDepth int) {
 	l.trace.start = start + 2
 	l.trace.end = end
